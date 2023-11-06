@@ -10,6 +10,7 @@ var readline = require('readline');
 var moment = require('moment');
 var exec = require('child_process').exec;
 var validator = require('validator');
+const limit = require("express-limit").limit;
 
 // zip-slip
 var fileType = require('file-type');
@@ -19,19 +20,21 @@ var fs = require('fs');
 // prototype-pollution
 var _ = require('lodash');
 
-exports.index = function (req, res, next) {
-  Todo.
-    find({}).
-    sort('-updated_at').
-    exec(function (err, todos) {
-      if (err) return next(err);
-
-      res.render('index', {
-        title: 'Patch TODO List',
-        subhead: 'Vulnerabilities at their best',
-        todos: todos,
-      });
+exports.index = async function (req, res, next) {
+  try {
+    const todos = await Todo.
+      find({}).
+      sort('-updated_at').
+      exec();
+    
+    res.render('index', {
+      title: 'Patch TODO List',
+      subhead: 'Vulnerabilities at their best',
+      todos
     });
+  } catch (err) {
+    return next(err);
+  }
 };
 
 exports.loginHandler = async function (req, res, next) {
@@ -194,17 +197,15 @@ exports.create = function (req, res, next) {
   });
 };
 
-exports.destroy = function (req, res, next) {
-  Todo.findById(req.params.id, function (err, todo) {
-
-    try {
-      todo.remove(function (err, todo) {
-        if (err) return next(err);
-        res.redirect('/');
-      });
-    } catch (e) {
-    }
-  });
+exports.destroy = async function (req, res, next) {
+  const id = String(req.params.id);
+  const todo = await Todo.findById(id);
+  try {
+    await todo.remove();
+    res.redirect('/');
+  } catch (err) {
+    return next(err);
+  }
 };
 
 exports.edit = function (req, res, next) {
@@ -222,17 +223,18 @@ exports.edit = function (req, res, next) {
     });
 };
 
-exports.update = function (req, res, next) {
-  Todo.findById(req.params.id, function (err, todo) {
+exports.update = async function (req, res, next) {
+  const id = String(req.params.id);
+  const todo = await Todo.findById(id);
 
-    todo.content = req.body.content;
-    todo.updated_at = Date.now();
-    todo.save(function (err, todo, count) {
-      if (err) return next(err);
-
-      res.redirect('/');
-    });
-  });
+  todo.content = req.body.content;
+  todo.updated_at = Date.now();
+  try {
+    await todo.save();
+    res.redirect('/');
+  } catch(err) {
+    return next(err);
+  }
 };
 
 // ** express turns the cookie key to lowercase **

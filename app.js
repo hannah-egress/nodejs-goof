@@ -23,6 +23,7 @@ var dust = require('dustjs-linkedin');
 var dustHelpers = require('dustjs-helpers');
 var cons = require('consolidate');
 const hbs = require('hbs')
+const limit = require("express-limit").limit;
 
 var app = express();
 var routes = require('./routes');
@@ -47,24 +48,28 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(fileUpload());
 
 // Routes
+const rateLimit = limit({
+  max: 5, // 5 requests
+  period: 60 * 1000, // per minute (60 seconds)
+});
 app.use(routes.current_user);
-app.get('/', routes.index);
-app.get('/login', routes.login);
-app.post('/login', routes.loginHandler);
-app.get('/admin', routes.isLoggedIn, routes.admin);
-app.get('/account_details', routes.isLoggedIn, routes.get_account_details);
-app.post('/account_details', routes.isLoggedIn, routes.save_account_details);
-app.get('/logout', routes.logout);
-app.post('/create', routes.create);
-app.get('/destroy/:id', routes.destroy);
-app.get('/edit/:id', routes.edit);
-app.post('/update/:id', routes.update);
-app.post('/import', routes.import);
-app.get('/about_new', routes.about_new);
-app.get('/chat', routes.chat.get);
-app.put('/chat', routes.chat.add);
-app.delete('/chat', routes.chat.delete);
-app.use('/users', routesUsers)
+app.get('/', rateLimit, routes.index);
+app.get('/login', rateLimit, routes.login);
+app.post('/login', rateLimit, routes.loginHandler);
+app.get('/admin', rateLimit, routes.isLoggedIn, routes.admin);
+app.get('/account_details', rateLimit, routes.isLoggedIn, routes.get_account_details);
+app.post('/account_details', rateLimit, routes.isLoggedIn, routes.save_account_details);
+app.get('/logout', rateLimit, routes.logout);
+app.post('/create', rateLimit, routes.create);
+app.get('/destroy/:id', rateLimit, routes.destroy);
+app.get('/edit/:id', rateLimit, routes.edit);
+app.post('/update/:id', rateLimit, routes.update);
+app.post('/import', rateLimit, routes.import);
+app.get('/about_new', rateLimit, routes.about_new);
+app.get('/chat', rateLimit, routes.chat.get);
+app.put('/chat', rateLimit, routes.chat.add);
+app.delete('/chat', rateLimit, routes.chat.delete);
+app.use('/users', rateLimit, routesUsers)
 
 // Static
 app.use(st({ path: './public', url: '/public' }));

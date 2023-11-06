@@ -30,6 +30,7 @@ var routes = require('./routes');
 var routesUsers = require('./routes/users.js')
 
 // all environments
+app.disable('x-powered-by');
 app.set('port', process.env.PORT || 3001);
 app.engine('dust', cons.dust);
 app.engine('hbs', hbs.__express);
@@ -53,6 +54,7 @@ const rateLimit = limit({
   period: 60 * 1000, // per minute (60 seconds)
 });
 app.use(routes.current_user);
+app.use(rateLimit);
 app.get('/', rateLimit, routes.index);
 app.get('/login', rateLimit, routes.login);
 app.post('/login', rateLimit, routes.loginHandler);

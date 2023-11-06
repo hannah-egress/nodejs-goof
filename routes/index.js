@@ -198,8 +198,8 @@ exports.create = function (req, res, next) {
 };
 
 exports.destroy = async function (req, res, next) {
-  const id = String(req.params.id);
-  const todo = await Todo.findById(id);
+  const query = { _id: String(req.params.id) };
+  const todo = await Todo.findOne(query);
   try {
     await todo.remove();
     res.redirect('/');
@@ -224,8 +224,8 @@ exports.edit = function (req, res, next) {
 };
 
 exports.update = async function (req, res, next) {
-  const id = String(req.params.id);
-  const todo = await Todo.findById(id);
+  const query = { _id: String(req.params.id) };
+  const todo = await Todo.findOne(query);
 
   todo.content = req.body.content;
   todo.updated_at = Date.now();
